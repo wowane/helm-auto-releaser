@@ -1,0 +1,55 @@
+name: Release Helm Chart - Dev
+on: pull_request
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCLOUD_SERVICE_KEY }}'
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+      - name: Add helm plugin
+        run: |
+          helm plugin install https://github.com/mbenabda/helm-local-chart-version --version 0.0.7
+      - name: Login to GAR
+        uses: docker/login-action@v1
+        with:
+          registry: europe-west1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCLOUD_SERVICE_KEY }}
+      - name: Setup python (chart-testing dependency)
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.7
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.3.1
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --remote origin --target-branch main)
+          echo "Changed charts: $changed"
+          if [[ -n "$changed" ]]; then
+            changed_string=$(printf ",%s" ${changed[@]})
+            CT_CHANGED_LIST=${changed_string:1}
+            echo "::set-output name=changed::true"
+            echo "::set-output name=CT_CHANGED_LIST::$CT_CHANGED_LIST"
+          fi
+      - name: Bump new chart version
+        run: |
+          chartz=($(echo ${{ steps.list-changed.outputs.CT_CHANGED_LIST }} | tr "," "\n"))
+          for chart in "${chartz[@]}"; do
+            helm local-chart-version bump -c $chart -s minor
+          done
+        if: steps.list-changed.outputs.changed
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: bump chart version
