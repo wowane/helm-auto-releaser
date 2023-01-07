@@ -43,3 +43,4 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: bump chart version
+    if: github.event.label.name == 'renovate' && github.event.label.name != 'major'
