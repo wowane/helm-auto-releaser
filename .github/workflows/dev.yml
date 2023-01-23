@@ -1,5 +1,9 @@
 name: Release Helm Chart - Dev
-on: pull_request
+on:
+  pull_request:
+    types: [opened]
+  label:
+    types: [created, edited, deleted]
 
 jobs:
   helm:
