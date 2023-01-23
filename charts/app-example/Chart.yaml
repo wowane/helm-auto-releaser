@@ -1,17 +1,17 @@
 apiVersion: v2
-name: app-example
-description: app-example Helm Chart
-maintainers:
-- name: wowane
-type: application
-version: 1.0.0
 dependencies:
 - name: firstlib
   repository: oci://europe-west1-docker.pkg.dev/example-lib/helm
-  version: 1.1.0
+  version: 1.2.0
 - name: secondlib
   repository: oci://europe-west1-docker.pkg.dev/example-lib/helm
-  version: 1.0.0
+  version: 1.0.1
 - name: thirdlib
   repository: oci://europe-west1-docker.pkg.dev/example-lib/helm
-  version: 1.0.2
+  version: 1.2.2
+description: app-example Helm Chart
+maintainers:
+- name: wowane
+name: app-example
+type: application
+version: 1.1.0
